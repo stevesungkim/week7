@@ -1,11 +1,32 @@
-# https://investorplace.com/2017/12/10-best-of-the-best-stocks-to-buy-for-2018/ 
-# Gather stock symbols,
-# write program that scrapes Yahoo finance for specific financial statistics related to your set of stock symbols.
-# ALGN, COHR, ANET, ABMD, TREX, WLK, PAYC, PPC, FIVE, NVDA
+install.packages("XML")
 
 library("rvest")
 library("dplyr")
+library("data.table")
+library("tidyr")
+library("tidyverse")
+library("XML")
+library("xml2")
+library("rvest")
+library("httr")
+stocks <- c("ALGN","COHR","ANET","ABMD","TREX","WLK","PAYC","PPC","FIVE","NVDA")
 
-stockprice <- "https://investorplace.com/2017/12/10-best-of-the-best-stocks-to-buy-for-2018/"
-read_html(stockprice)
+for (s in stocks) {
+  url <- paste0("https://finance.yahoo.com/quote/", s)
+  webpage <- readLines(url)
+  html <- htmlTreeParse(webpage, useInternalNodes = TRUE, asText = TRUE)
+  tableNodes <- getNodeSet(html, "//table")
+  
+  
+  assign(s, readHTMLTable(tableNodes[[6]],
+                          header= c("earningEstimates", "revenueEstimates", "earningHistory", "epsTrend", "epsRevisions", "growthEst")))
+  
+  df <- get(s)
+  df['stock'] <- s
+  assign(s, df)
+}
 
+stockdatalist <- cbind(mget(stocks))
+stockdata <- do.call(rbind, stockdatalist)
+
+stockdata <- stockdata[, c(ncol(stockdata), 1:ncol(stockdata)-1)]
