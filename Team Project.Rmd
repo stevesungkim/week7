@@ -1,0 +1,114 @@
+---
+title: "Team Project"
+author: "Steve Kim"
+date: '2022-04-18'
+output: html_document
+---
+
+## Script
+
+library("stringr")
+library("janeaustenr")
+library("dplyr")
+library("tidytext")
+library("ggplot2")
+install.packages("wordcloud")
+library("wordcloud")
+install.packages("tm")
+library("tm")
+library("SnowballC")
+
+AllBooksContent <- readLines('/Users/stevesungkim/Documents/DESC620/week7/AllBooksContent.csv', encoding = 'UTF-8')
+head(AllBooksContent)
+str(AllBooksContent)
+
+AllBooksContent <- as_tibble(AllBooksContent)
+head(AllBooksContent)
+
+
+
+AllBooksContent_rev <- AllBooksContent %>% 
+  unnest_tokens(input = value,
+                output = word,
+                token = 'words') %>%
+  filter(
+    !str_detect(word, pattern = "\\d"),
+    !str_detect(word, pattern = "you’re")
+  )
+
+
+data(stop_words)
+
+AllBooksContent_rev <- AllBooksContent_rev %>% anti_join(stop_words, by = "word")
+AllBooksContent_rev
+
+
+print(AllBooksContent_rev)
+
+AllBooksContent_rev <- AllBooksContent_rev %>% 
+  count(word, sort = T)
+head(AllBooksContent_rev)
+
+
+AllBooksContent_rev <- AllBooksContent_rev %>% 
+  filter(str_count(word) > 1)
+
+
+top20 <- AllBooksContent_rev %>% head(20)
+print(top20)
+
+
+ggplot(top20, aes(x = reorder(word, n), y = n)) + geom_col() +
+  coord_flip() + geom_text(aes(label = n), hjust = -0.3) +
+  labs(title = 'All books Contents Word Frequency', 
+       x = NULL, y = NULL) + 
+  theme(title = element_text(size = 11))
+
+install.packages("tm")  # for text mining
+install.packages("SnowballC") # for text stemming
+install.packages("wordcloud") # word-cloud generator 
+install.packages("RColorBrewer") # color palettes
+# Load
+library("tm")
+library("SnowballC")
+library("wordcloud")
+library("RColorBrewer")
+
+
+docs <- Corpus(VectorSource(AllBooksContent))
+
+inspect(docs)
+
+toSpace <- content_transformer(function (x , pattern ) gsub(pattern, " ", x))
+docs <- tm_map(docs, toSpace, "/")
+docs <- tm_map(docs, toSpace, "@")
+docs <- tm_map(docs, toSpace, "\\|")
+
+docs <- tm_map(docs, content_transformer(tolower))
+# Remove numbers
+docs <- tm_map(docs, removeNumbers)
+# Remove english common stopwords
+docs <- tm_map(docs, removeWords, stopwords("english"))
+# Remove punctuations
+docs <- tm_map(docs, removePunctuation)
+# Eliminate extra white spaces
+docs <- tm_map(docs, stripWhitespace)
+# Text stemming
+# docs <- tm_map(docs, stemDocument)
+
+dtm <- TermDocumentMatrix(docs)
+m <- as.matrix(dtm)
+v <- sort(rowSums(m),decreasing=TRUE)
+d <- data.frame(word = names(v),freq=v)
+head(d, 10)
+
+set.seed(1234)
+wordcloud(words = d$word, freq = d$freq, min.freq = 1,
+          max.words=200, random.order=FALSE, rot.per=0.35, 
+          colors=brewer.pal(8, "Dark2"))
+
+
+![Word Map](https://github.com/stevesungkim/week7/blob/main/Rplot.png)
+
+![Word Frequency](https://github.com/stevesungkim/week7/blob/main/Rplot01.png)
+
