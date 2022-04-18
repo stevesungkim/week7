@@ -5,7 +5,7 @@ date: '2022-04-18'
 output: html_document
 ---
 
-## Script
+## Team Project Script
 
 library("stringr")
 library("janeaustenr")
@@ -18,14 +18,14 @@ install.packages("tm")
 library("tm")
 library("SnowballC")
 
+## Reading content from csv file
 AllBooksContent <- readLines('/Users/stevesungkim/Documents/DESC620/week7/AllBooksContent.csv', encoding = 'UTF-8')
 head(AllBooksContent)
 str(AllBooksContent)
 
+## putting content as tibble
 AllBooksContent <- as_tibble(AllBooksContent)
 head(AllBooksContent)
-
-
 
 AllBooksContent_rev <- AllBooksContent %>% 
   unnest_tokens(input = value,
@@ -37,6 +37,7 @@ AllBooksContent_rev <- AllBooksContent %>%
   )
 
 
+## removing stop words
 data(stop_words)
 
 AllBooksContent_rev <- AllBooksContent_rev %>% anti_join(stop_words, by = "word")
@@ -102,13 +103,13 @@ v <- sort(rowSums(m),decreasing=TRUE)
 d <- data.frame(word = names(v),freq=v)
 head(d, 10)
 
+
+## creating word cloud
 set.seed(1234)
 wordcloud(words = d$word, freq = d$freq, min.freq = 1,
           max.words=200, random.order=FALSE, rot.per=0.35, 
           colors=brewer.pal(8, "Dark2"))
 
-
-![Word Map](https://github.com/stevesungkim/week7/blob/main/Rplot.png)
+![Word Cloud](https://github.com/stevesungkim/week7/blob/main/Rplot.png)
 
 ![Word Frequency](https://github.com/stevesungkim/week7/blob/main/Rplot01.png)
-
