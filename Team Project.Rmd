@@ -109,7 +109,11 @@ set.seed(1234)
 wordcloud(words = d$word, freq = d$freq, min.freq = 1,
           max.words=200, random.order=FALSE, rot.per=0.35, 
           colors=brewer.pal(8, "Dark2"))
+          
+## displaying word cloud and word frequency graphic
 
 ![Word Cloud](https://github.com/stevesungkim/week7/blob/main/Rplot.png)
 
 ![Word Frequency](https://github.com/stevesungkim/week7/blob/main/Rplot01.png)
+
+## most frequent words are 'machine', 'data', 'learning', 'science' 
