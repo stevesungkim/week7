@@ -1,10 +1,13 @@
-library(stringr)
-library(janeaustenr)
-library(dplyr)
-library(tidytext)
-library(ggplot2)
-install.packages("ggwordcloud")
-library(ggwordcloud)
+library("stringr")
+library("janeaustenr")
+library("dplyr")
+library("tidytext")
+library("ggplot2")
+install.packages("wordcloud")
+library("wordcloud")
+install.packages("tm")
+library("tm")
+library("SnowballC")
 
 AllBooksContent <- readLines('/Users/stevesungkim/Documents/DESC620/week7/AllBooksContent.csv', encoding = 'UTF-8')
 head(AllBooksContent)
@@ -52,12 +55,46 @@ ggplot(top20, aes(x = reorder(word, n), y = n)) + geom_col() +
        x = NULL, y = NULL) + 
   theme(title = element_text(size = 11))
 
+install.packages("tm")  # for text mining
+install.packages("SnowballC") # for text stemming
+install.packages("wordcloud") # word-cloud generator 
+install.packages("RColorBrewer") # color palettes
+# Load
+library("tm")
+library("SnowballC")
+library("wordcloud")
+library("RColorBrewer")
 
-# ggplot(AllBooksContent_rev, aes(label = word, size = n, col = n)) +
-#   geom_text_wordcloud(seed = 143) + 
-#   scale_radius(limits = c(3, NA), 
-#                range = c(3, 30)) + 
-#   scale_color_gradient(low = '#66aaf2', 
-#                        high = '#004EA1') +
-#   theme_minimal()
+
+docs <- Corpus(VectorSource(AllBooksContent))
+
+inspect(docs)
+
+toSpace <- content_transformer(function (x , pattern ) gsub(pattern, " ", x))
+docs <- tm_map(docs, toSpace, "/")
+docs <- tm_map(docs, toSpace, "@")
+docs <- tm_map(docs, toSpace, "\\|")
+
+docs <- tm_map(docs, content_transformer(tolower))
+# Remove numbers
+docs <- tm_map(docs, removeNumbers)
+# Remove english common stopwords
+docs <- tm_map(docs, removeWords, stopwords("english"))
+# Remove punctuations
+docs <- tm_map(docs, removePunctuation)
+# Eliminate extra white spaces
+docs <- tm_map(docs, stripWhitespace)
+# Text stemming
+# docs <- tm_map(docs, stemDocument)
+
+dtm <- TermDocumentMatrix(docs)
+m <- as.matrix(dtm)
+v <- sort(rowSums(m),decreasing=TRUE)
+d <- data.frame(word = names(v),freq=v)
+head(d, 10)
+
+set.seed(1234)
+wordcloud(words = d$word, freq = d$freq, min.freq = 1,
+          max.words=200, random.order=FALSE, rot.per=0.35, 
+          colors=brewer.pal(8, "Dark2"))
 
